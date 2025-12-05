@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ta">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AI Pic Editor — Welcome</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Background bubbles -->
+  <div class="bubbles" aria-hidden="true">
+    <div class="bubble b1"></div>
+    <div class="bubble b2"></div>
+    <div class="bubble b3"></div>
+    <div class="bubble b4"></div>
+    <div class="bubble b5"></div>
+  </div>
+
+  <!-- Splash screen -->
+  <div id="splash" class="splash">
+    <div class="splash-inner">
+      <h1>Welcome</h1>
+      <!-- Cute rabbit inline SVG -->
+      <div class="rabbit" aria-hidden="true">
+        <svg width="160" height="160" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img">
+          <g fill="none" fill-rule="evenodd">
+            <ellipse cx="60" cy="80" rx="36" ry="30" fill="#fff"/>
+            <path d="M44 35c-6-14-22-18-28-10-6 8 0 24 12 28" fill="#fff"/>
+            <path d="M76 35c6-14 22-18 28-10 6 8 0 24-12 28" fill="#fff"/>
+            <circle cx="48" cy="78" r="3" fill="#333"/>
+            <circle cx="72" cy="78" r="3" fill="#333"/>
+            <path d="M60 80c-3 4-9 6-9 6s6 0 9 0c3 0 9 0 9 0s-6-2-9-6z" fill="#f6c"/>
+            <path d="M52 66c2 2 6 2 8 0" stroke="#333" stroke-linecap="round" stroke-width="1.6" fill="none"/>
+            <circle cx="48" cy="66" r="2" fill="#fff" opacity=".6"/>
+            <circle cx="72" cy="66" r="2" fill="#fff" opacity=".6"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main app -->
+  <main id="app" class="app hidden" role="main">
+    <header class="header">
+      <h2>AI Pic Editor</h2>
+      <p id="desc" class="desc" aria-live="polite">...</p>
+    </header>
+
+    <section class="controls">
+      <button id="requestAccessBtn" class="btn primary">Request File Access</button>
+      <button id="dropBtn" class="btn">Drop File</button>
+      <div id="status" class="status" aria-live="polite">Status: waiting</div>
+    </section>
+
+    <section id="previewSection" class="preview hidden">
+      <h3>File Preview</h3>
+      <div id="previewArea"></div>
+    </section>
+  </main>
+
+  <input id="fallbackFileInput" type="file" accept="image/*" style="display:none" />
+
+  <script src="script.js"></script>
+</body>
+</html>

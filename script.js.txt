@@ -1,0 +1,171 @@
+// script.js
+// Handles splash, file access, drop button behavior, and random descriptions.
+
+const splash = document.getElementById('splash');
+const app = document.getElementById('app');
+const requestAccessBtn = document.getElementById('requestAccessBtn');
+const dropBtn = document.getElementById('dropBtn');
+const statusEl = document.getElementById('status');
+const previewSection = document.getElementById('previewSection');
+const previewArea = document.getElementById('previewArea');
+const descEl = document.getElementById('desc');
+const fallbackInput = document.getElementById('fallbackFileInput');
+
+let pickedFileHandle = null;
+let pickedFileName = null;
+
+// Random descriptions for "AI Pic Editor"
+const descriptions = [
+  "Quickly enhance face details ✨",
+  "Auto color balance and pop 🔮",
+  "Remove background in one click",
+  "Cartoonize, oil-paint or stylize",
+  "Make it dreamy with soft glow",
+  "AI-assisted crop suggestions",
+  "Sharpen tiny details automatically",
+  "Add a cute sticker or frame",
+  "Try 'vintage film' or 'neon' filters",
+  "High-res upscale preview"
+];
+
+// Cycle descriptions
+let descIndex = 0;
+function rotateDesc(){
+  descEl.textContent = descriptions[descIndex % descriptions.length];
+  descIndex++;
+}
+rotateDesc();
+setInterval(rotateDesc, 3000); // change every 3s
+
+// Show splash and auto fade after 2s
+setTimeout(() => {
+  splash.classList.add('fadeout');
+  // after fade animation hide and reveal app
+  setTimeout(() => {
+    splash.style.display = 'none';
+    app.classList.remove('hidden');
+    statusEl.textContent = 'Status: waiting';
+  }, 700);
+}, 2000);
+
+// Utility: show status
+function setStatus(text){
+  statusEl.textContent = 'Status: ' + text;
+}
+
+// Request File Access (File System Access API) with fallback
+requestAccessBtn.addEventListener('click', async () => {
+  setStatus('requesting access...');
+  // Prefer showOpenFilePicker if supported
+  if (window.showOpenFilePicker) {
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        multiple: false,
+        types: [
+          {
+            description: 'Images or any file',
+            accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp', '.gif'], 'text/*': ['.txt'] }
+          }
+        ]
+      });
+      pickedFileHandle = handle;
+      pickedFileName = handle.name || 'unknown';
+      setStatus('access granted — ' + pickedFileName);
+      // After access, change drop button behavior
+      dropBtn.textContent = 'Open Dropped File';
+      // Read a preview if possible
+      try {
+        const file = await handle.getFile();
+        showPreviewOfFile(file);
+      } catch (err) {
+        console.warn('Could not read file immediately:', err);
+      }
+    } catch (err) {
+      // user canceled or denied
+      setStatus('OK'); // per your request: show OK if access was not granted
+      console.log('File picker canceled or failed:', err);
+    }
+  } else {
+    // Fallback: trigger input file
+    fallbackInput.click();
+    fallbackInput.onchange = (e) => {
+      const f = e.target.files[0];
+      if (!f) {
+        setStatus('OK');
+        return;
+      }
+      pickedFileHandle = null; // we have no handle in fallback
+      pickedFileName = f.name;
+      setStatus('picked (fallback): ' + pickedFileName);
+      dropBtn.textContent = 'Open Dropped File';
+      showPreviewOfFile(f);
+    };
+  }
+});
+
+// Drop button: before permission -> show Failed; after permission -> open file
+dropBtn.addEventListener('click', async () => {
+  if (pickedFileHandle || pickedFileName) {
+    // If we have a handle, try to read file from handle; if fallback, we might have already read it
+    setStatus('opening file...');
+    try {
+      if (pickedFileHandle) {
+        const file = await pickedFileHandle.getFile();
+        showPreviewOfFile(file);
+        setStatus('file opened: ' + (pickedFileName || file.name));
+      } else {
+        // no handle but name exists (from fallback). Try to open fallback input again to reselect.
+        fallbackInput.click();
+        fallbackInput.onchange = (e) => {
+          const f = e.target.files[0];
+          if (f) {
+            showPreviewOfFile(f);
+            setStatus('file opened: ' + f.name);
+          } else {
+            setStatus('Failed');
+            alert('Failed');
+          }
+        };
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus('Failed');
+      alert('Failed');
+    }
+  } else {
+    // per your request: clicking drop file before grant should show "Failed"
+    setStatus('Failed');
+    alert('Failed');
+  }
+});
+
+// Show preview for images or display file info
+function showPreviewOfFile(file){
+  previewArea.innerHTML = '';
+  previewSection.classList.remove('hidden');
+
+  if (!file) {
+    previewArea.textContent = 'No preview available';
+    return;
+  }
+
+  const type = file.type || '';
+  if (type.startsWith('image/')) {
+    const img = document.createElement('img');
+    img.alt = file.name || 'image';
+    img.src = URL.createObjectURL(file);
+    previewArea.appendChild(img);
+  } else {
+    // show small text preview for text files
+    const reader = new FileReader();
+    reader.onload = () => {
+      const pre = document.createElement('pre');
+      pre.textContent = reader.result.slice(0, 500) + (reader.result.length > 500 ? '\n\n...truncated...' : '');
+      previewArea.appendChild(pre);
+    };
+    reader.onerror = () => {
+      previewArea.textContent = 'Cannot preview this file type.';
+    };
+    reader.readAsText(file);
+  }
+}
